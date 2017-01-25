@@ -74,7 +74,8 @@ module.exports = function (grunt) {
       fixedSizeVersion: false,
       externalDefs: false,
       includeTitleElement: true,
-      preserveDescElement: true
+      preserveDescElement: true,
+      generateSprite: false
     });
 
     var cleanupAttributes = [];
@@ -90,7 +91,7 @@ module.exports = function (grunt) {
           $resultSvg = $resultDocument('svg'),
           $resultDefs = $resultDocument('defs').first(),
           iconNameViewBoxArray = [];  // Used to store information of all icons that are added
-                                      // { name : '' }
+                                      // { name : '', width: '', height: '' }
 
       // Merge in SVG attributes from option
       for (var attr in options.svg) {
@@ -258,7 +259,7 @@ module.exports = function (grunt) {
         // Add viewBox (if present on SVG w/ optional width/height fallback)
         var viewBox = $svg.attr('viewBox');
 
-        if (!viewBox && options.inheritviewbox) {
+        if (!viewBox && (options.inheritviewbox || options.generateSprite)) {
           var width = $svg.attr('width');
           var height = $svg.attr('height');
           var pxSize = /^\d+(\.\d+)?(px)?$/;
@@ -269,6 +270,8 @@ module.exports = function (grunt) {
 
         if (viewBox) {
           $symbol.attr('viewBox', viewBox);
+          width = parseFloat(viewBox.split(' ')[2]);
+          height = parseFloat(viewBox.split(' ')[3]);
         }
 
         // Add ID to symbol
@@ -290,10 +293,12 @@ module.exports = function (grunt) {
         $resultSvg.append($res.html());
 
         // Add icon to the demo.html array
-        if (!!options.includedemo) {
+        if (!!options.includedemo || !!options.generateSprite) {
           iconNameViewBoxArray.push({
             name: graphicId,
-            title: title
+            title: title,
+            width: width,
+            height: height
           });
         }
 
@@ -371,6 +376,32 @@ module.exports = function (grunt) {
       if ( $resultDefs.html().trim() === '' ) {
         $resultDefs.remove();
       }
+
+      // Generate sprite if required
+      if(options.generateSprite) {
+        // display symbol
+        var maxHeight = Math.ceil(iconNameViewBoxArray.map(function(value){
+          return value.height || 0;
+        }).reduce(function(acc, value){
+            return (value>acc)?value:acc;
+        }));
+        var maxWidth = Math.ceil(iconNameViewBoxArray.map(function(value){
+          return value.width || 0;
+        }).reduce(function(acc, value){
+            return (value>acc)?value:acc;
+        }));
+        iconNameViewBoxArray.forEach(function(icon, index){
+          var iconId = icon.name;
+          var useId = iconId + '-use';
+          var viewId = iconId + '-view';
+          var viewBox = [0, (maxHeight * (index + 1)), icon.width, maxHeight].join(' ');
+
+          $resultSvg.append('<use id="' + useId +'" xlink:href="#' + iconId + '" x=0 y=' + (maxHeight * (index + 1)) + ' height=' + maxHeight + ' />');
+          $resultSvg.append('<view id="' + viewId + '" viewBox="' + viewBox + '" />');
+          $resultSvg.attr("viewBox", '0 0 ' + maxWidth + ' ' + maxHeight * (iconNameViewBoxArray.length + 1));
+        });
+      }
+
 
       var result = options.formatting ? beautify($resultDocument.html(), options.formatting) : $resultDocument.html();
       var destName = path.basename(file.dest, '.svg');
