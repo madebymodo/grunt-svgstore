@@ -48,6 +48,10 @@
             width: 128px;
             height: 128px;
         }
+        .natural {
+            width: 48px;
+            height: 48px;
+        }
     </style>
 </head>
 <body>
@@ -58,7 +62,7 @@
 
 <h2 id="the-before">An icon before processing by SVGstore</h2>
 
-<p>This one of the original SVG image, before being merged by SVGstore. It should be visible and require no styling.</p>
+<p>This is one of the original SVG image, before being merged by SVGstore. It should be visible and require no styling.</p>
 
 <figure>
 <img class="icon" src="images/carica.svg">
@@ -96,7 +100,7 @@
 
 <h2 id="with-a-custom-view">Now we show each icon with a Custom View</h2>
 
-<p>Reference a custom view <code>&lt;view id='icon-carica' viewBox='0 48 48 48' /&gt;</code> (second icon of a column sprite of <em>n</em> icons 48x48 pixels). This is buggy on Safari, see <a href="#safari-issues">workaround</a>.</p>
+<p>Reference a custom view <code>&lt;view id='icon-carica' viewBox='0 48 48 48' /&gt;</code> (second icon of a column sprite of <em>n</em> icons 48x48 pixels). This does not work on Safari, see <a href="#safari-issues">workaround</a>.</p>
 
 <p>In HTML you get <code>&lt;img src='icons-rebuild.svg#icon-carica'&gt;</code></p>
 
@@ -106,7 +110,7 @@
 <img class="icon yuge"   src="images/icons-rebuild.svg#iconimg-twitter" >
 </figure>
 
-<p>Or as a <code>background-image</code> CSS property, as in: <code>&lt;div style='background-image:url(icons-rebuild.svg#icon-carica)'&gt;</code>. This is buggy on Safari, see <a href="#safari-issues">workaround</a>.</p>
+<p>Or as a <code>background-image</code> CSS property, as in: <code>&lt;div style='background-image:url(icons-rebuild.svg#icon-carica)'&gt;</code>. This does not work on Safari, see <a href="#safari-issues">workaround</a>.</p>
 
 <figure>
 <div class="icon yuge" style="background-image:url(images/icons-rebuild.svg#iconimg-facebook); background-size: 24px 24px; background-repeat: space;" >This div has been filled with facebook icons.</div>
@@ -187,6 +191,21 @@
   <li>Fragment identifiers specifying a viewBox will work with the <code>object</code> or <code>iframe</code> elements.</li>
   <li>Fragment identifiers specifying a custom view element in the SVG will work with <code>iframe</code> elements.</li>
 </ol>
+
+<p>If you plan on only displaying the icon (contrary to the example above where there was also content within the node), you could tweak the CSS as follows:<code>
+&lt;div style="
+background-image: url(icons-rebuild.svg#iconimg-twitter);
+background-size: 48px;
+background-position: 0 -96px;
+width: 48px;
+height: 48px;
+"&gt;
+</code>
+Note that changing the size of the icon requires changing the offset of the background-position, because it’s computed agains the HTML node size and not against the original SVG size (use sass).</p>
+<figure>
+<div class="icon natural" style="display: inline-block; background-image:url(images/icons-rebuild.svg#iconimg-facebook); background-position: 0 -96px; background-size: 48px;"></div>
+<div class="icon" style="display: inline-block; width: 62.4px; height: 62.4px; background-image:url(images/icons-rebuild.svg#iconimg-facebook); background-position: 0 -124.8px; background-size: 62.4px;"></div>
+</figure>
 
 <p>So, your best bet is probably to use either <code>iframe</code> with a <code>view</code> element id:</p>
 
