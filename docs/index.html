@@ -239,7 +239,7 @@ data='images/icons-rebuild.svg?id=three#svgView(viewBox(0,96,48,48))'
 
 <h2 id="notes-amp-credits">Notes &amp; Credits</h2>
 
-<p>SVG sprite sheets are similar to <a href="http://simurai.com/blog/2012/04/02/svg-stacks/">icon stacks</a>, and unfortunately suffers similar <a href="https://bugs.webkit.org/show_bug.cgi?id=137328">issues</a> in Safari. What I like about this method is that all artwork is visible in the original image, and you don’t have to do any style tinkering. You do have to do some offset math though, so you’ll have to pick your poison here.</p>
+<p>We were looking for a common implementation for SVG icons that allowed us to use the same external file both via svg:use and classic CSS background techniques. Much of the work was already available (Bear Travis’ and Chris Coyer’s research, Jonathan Neal’s grunt-svgstore). This brings together work that was already laid out and just needed to be composed together.</p>
 
 <p>Icons are from a project we’re working on. Browser icons are from Bear Travis' original article.</p>
 

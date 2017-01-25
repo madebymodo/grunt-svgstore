@@ -225,6 +225,16 @@ grunt.initConfig({
 });
 ```
 
+#### options.generateSprite (since 1.0.1)
+Type: `boolean`  
+Default value: `false`  
+
+When set to true, SVGs symbols are instanced in the file and a custom view for each instance is generated. This adds a minimal amount of code to the file but allows to use symbols both via the classic xlink:href and CSS background tecniques.
+```css
+background-image:url(icons.svg#icon-carica-view);
+```
+See [samples and browser support and workarounds](https://madebymodo.github.io/grunt-svgview/).
+
 Any of the configuration object properties may be omitted.
 
 ### Usage Examples
