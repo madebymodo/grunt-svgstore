@@ -257,11 +257,13 @@ module.exports = function (grunt) {
         }
 
         // Add viewBox (if present on SVG w/ optional width/height fallback)
-        var viewBox = $svg.attr('viewBox');
+        var viewBox = $svg.attr('viewBox'),
+            width,
+            height;
 
         if (!viewBox && (options.inheritviewbox || options.generateSprite)) {
-          var width = $svg.attr('width');
-          var height = $svg.attr('height');
+          width = $svg.attr('width');
+          height = $svg.attr('height');
           var pxSize = /^\d+(\.\d+)?(px)?$/;
           if (pxSize.test(width) && pxSize.test(height)) {
             viewBox = '0 0 ' + parseFloat(width) + ' ' + parseFloat(height);
