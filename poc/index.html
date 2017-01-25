@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SVG Sprite Sheets with SVG symbols</title>
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+    <style>
+        body { font-family: 'Source Sans Pro'; font-size: 120%; line-height: 1.4; max-width: 40em; margin: 0 auto; }
+
+        code { font-family: 'Source Code Pro'; background-color: #ddd; white-space: pre; }
+
+        .strike { text-decoration: line-through; }
+
+        figure { display: block; }
+
+        .icon { border: .2em solid #ccc; }
+
+        .hack { margin-right: -5em; border: none; }
+        .hack + .icon { background-color: white; }
+
+        table.support { table-layout: fixed; border-spacing: 0; width: 100%; }
+        table.support .col-5 { width: 20%; }
+        table.support .col-6 { width: 16.66667%; }
+        table.support .col-7 { width: 14.28571%; }
+        table.support .col-8 { width: 12.5%; }
+        table.support td { box-sizing: border-box; max-height: 1em; border-left: 2px solid white; border-right: 2px solid white; padding: 0.25em 0.5em; text-align: center; vertical-align: middle; }
+        table.support tr:first-child td { padding-top: 0.4em; }
+        table.support tr:first-child td:nth-child(2n + 1) { background-color: #eee; }
+        table.support .support { background-color: #8fa971; }
+        table.support .partial-support { background-color: #e8c373; }
+        table.support .no-support { background-color: #d87363; }
+
+        .icon {
+            color: #000;
+            fill: #000;
+            fill-rule: evenodd;
+        }
+        .single {
+            width: 32px;
+            height: 32px;
+        }
+        .double {
+            width: 64px;
+            height: 64px;
+        }
+        .yuge {
+            width: 128px;
+            height: 128px;
+        }
+    </style>
+</head>
+<body>
+    
+<h1 id="svg-sprite-sheets">SVG Sprite Sheets with SVG symbols</h1>
+
+<p>This POC builds on <a href="http://betravis.github.io/icon-methods/svg-sprite-sheets.html">Bear Travis' excellent work on SVG Sprite Sheets</a> (it even lifts his styles and demo page).</p> 
+
+<h2 id="the-before">An icon before processing by SVGstore</h2>
+
+<p>This one of the original SVG image, before being merged by SVGstore. It should be visible and require no styling.</p>
+
+<figure>
+<img class="icon" src="images/carica.svg">
+</figure>
+
+<h2 id="the-original-svgstore-sprite-sheet">The Original SVGstore Sprite Sheet</h2>
+
+<p>This is the original SVGstore sprite image. All icons have been merged without a particular distribution on the canvas. As <code>symbol</code>s they are invisible. The image should not be visible but take space.</p>
+
+<figure>
+<img class="icon" src="images/icons.svg">
+</figure>
+
+<p>This is one of the icons pulled via <code>use</code> from the SVGstore sprite. Visible via styling.</p>
+<svg class="icon single">
+	<use xlink:href="http://localhost:3000/images/icons.svg#icon-delete"></use>
+</svg>
+
+<h2 id="display-symbols">Display symbols</h2>
+
+<p>This is the SVGstore output with added <code>use</code> references to the symbols to display them and arrange them as a sprite. If we specify a root <code>viewBox="0 0 0 0"</code> custom viewboxes cannot override it (it made sense as it allowed not to display anything if calling the svg without custom views). The image therefore is visible.</p>
+
+<figure>
+<img class="icon" src="images/icons-rebuild.svg" style="
+    width: 48px;
+">
+</figure>
+
+<h2 id="no-regressions"><code>use</code> should still work with no regressions</h2>
+
+<p>This is one of the icons pulled via <code>use</code> from the SVGstore sprite. Visible via styling.</p>
+<svg class="icon single">
+    <use xlink:href="http://localhost:3000/images/icons.svg#icon-delete"></use>
+</svg>
+
+<h2 id="with-a-custom-view">Now we show each icon with a Custom View</h2>
+
+<p>Reference a custom view <code>&lt;view id='icon-carica' viewBox='0 48 48 48' /&gt;</code> (second icon of a column sprite of <em>n</em> icons 48x48 pixels). This is buggy on Safari, see <a href="#safari-issues">workaround</a>.</p>
+
+<p>In HTML you get <code>&lt;img src='icons-rebuild.svg#icon-carica'&gt;</code></p>
+
+<figure>
+<img class="icon single" src="images/icons-rebuild.svg#iconimg-carica" >
+<img class="icon double" src="images/icons-rebuild.svg#iconimg-facebook" >
+<img class="icon yuge"   src="images/icons-rebuild.svg#iconimg-twitter" >
+</figure>
+
+<p>Or as a <code>background-image</code> CSS property, as in: <code>&lt;div style='background-image:url(icons-rebuild.svg#icon-carica)'&gt;</code>. This is buggy on Safari, see <a href="#safari-issues">workaround</a>.</p>
+
+<figure>
+<div class="icon yuge" style="background-image:url(images/icons-rebuild.svg#iconimg-facebook); background-size: 24px 24px; background-repeat: space;" >This div has been filled with facebook icons.</div>
+</figure>
+
+<p>Unfortunately, CSS SVG masks and views do not get along (yet). This code <code>
+&lt;div class="icon yuge" style="
+    background-color: #abc;
+    -webkit-mask-image: url(icons-rebuild.svg#iconimg-facebook); 
+    mask-image: url(icons-rebuild.svg#iconimg-facebook); 
+    -webkit-mask-size: 24px; 
+    mask-size: 24px; 
+    -webkit-mask-repeat: space; 
+    mask-repeat: space;" &gt;
+</code> does not work, neither by referencing the symbol, the instance nor the view.</p>
+<p>This makes it very hard to change the SVG fill color. The only one way that I can think of doing it is by parsing the SVG via JS, changing the fill color then base64 encoding it and inlining it as a data-uri -- a sort of polyfill until browser support symbols or views in the SVG when used as a clip mask.</p>
+
+
+<figure>
+<div class="icon yuge" style="background-color: #abc; -webkit-mask-image: url(images/icons-rebuild.svg#iconimg-facebook); mask-image: url(images/icons-rebuild.svg#iconimg-facebook); -webkit-mask-size: 24px; mask-size: 24px; -webkit-mask-repeat: space; mask-repeat: space;" >This div has been filled with facebook icons.</div>
+</figure>
+
+<h2 id="browser-support">Browser Support</h2>
+
+<p>This has not been verified and is based on Bear Travis’ tests for custom viewboxes.</p>
+
+<table class="support">
+<tbody><tr>
+
+    
+    <td class="col-7"><img src="images/internet-explorer.svg" alt="Internet Explorer" title="Internet Explorer"></td>
+
+    
+    <td class="col-7"><img src="images/chrome.svg" alt="Chrome" title="Chrome"></td>
+
+    
+    <td class="col-7"><img src="images/firefox.svg" alt="Firefox" title="Firefox"></td>
+
+    
+    <td class="col-7"><img src="images/safari.svg" alt="Safari" title="Safari"></td>
+
+    
+    <td class="col-7"><img src="images/opera.svg" alt="Opera" title="Opera"></td>
+
+    
+    <td class="col-7"><img src="images/ios.svg" alt="iOS" title="iOS"></td>
+
+    
+    <td class="col-7"><img src="images/android.svg" alt="Android" title="Android"></td>
+
+</tr>
+<tr>
+
+    <td class="support">9</td>
+
+    <td class="support">37</td>
+
+    <td class="support">32</td>
+
+    <td class="partial-support">7.1</td>
+
+    <td class="support">24</td>
+
+    <td class="partial-support">8</td>
+
+    <td class="no-support">4.4</td>
+
+</tr>
+</tbody></table>
+
+<p>Browser support should roughly map to support for <a href="http://caniuse.com/#feat=svg-fragment">SVG fragment identifiers</a>. FF, CR, O versions were only tested for the current release. IE 9 worked, though support is only listed on caniuse as 10 and up. Support for fragment ids is new for the Safari 7.1/iOS 8 release. It only works for image tags (not CSS backgrounds), and is pretty broken for this particular use case.</p>
+
+<h2 id="safari-issues">Safari Issues</h2>
+<p>While the <a href="https://bugs.webkit.org/show_bug.cgi?id=137328">original issue</a> in Safari 7.1 has been fixed as of Safari 9, the fix does not work for custom viewboxes on an svg as image. This may fix the original problem with <a href="http://simurai.com/blog/2012/04/02/svg-stacks/">icon stacks</a>, though. There are a couple potential workarounds.</p>
+
+<ol>
+  <li>Revert to using the image as a CSS background and size/position it as a sprite sheet</li>
+  <li>Fragment identifiers specifying a viewBox will work with the <code>object</code> or <code>iframe</code> elements.</li>
+  <li>Fragment identifiers specifying a custom view element in the SVG will work with <code>iframe</code> elements.</li>
+</ol>
+
+<p>So, your best bet is probably to use either <code>iframe</code> with a <code>view</code> element id:</p>
+
+<pre><code>&lt;iframe src='icons-rebuild.svg#iconimg-facebook'&gt;&lt;/iframe&gt;
+</code></pre>
+
+<figure>
+<iframe class="icon single" src="images/icons-rebuild.svg#iconimg-facebook"></iframe>
+<iframe class="icon single" src="images/icons-rebuild.svg#iconimg-twitter"></iframe>
+<iframe class="icon single" src="images/icons-rebuild.svg#iconimg-carica"></iframe>
+</figure>
+
+<p>Or to use <code>object</code> with a custom <code>viewBox</code> fragment id:</p>
+
+<pre><code>&lt;object type='image/svg+xml' 
+    data='icons-rebuild.svg?id=one#svgView(viewBox(0,0,48,48))'
+&gt;&lt;/object&gt;
+&lt;object type='image/svg+xml' 
+data='images/icons-rebuild.svg?id=two#svgView(viewBox(0,48,48,48))'
+&gt;&lt;/object&gt;
+&lt;object type='image/svg+xml' 
+data='images/icons-rebuild.svg?id=three#svgView(viewBox(0,96,48,48))'
+&gt;&lt;/object&gt;
+</code></pre>
+
+<figure>
+<object class="icon single" type="image/svg+xml" data="images/icons-rebuild.svg#svgView(viewBox(0,0,48,48))"></object>
+<object class="icon single" type="image/svg+xml" data="images/icons-rebuild.svg#svgView(viewBox(0,48,48,48))"></object>
+<object class="icon single" type="image/svg+xml" data="images/icons-rebuild.svg#svgView(viewBox(0,96,48,48))"></object>
+</figure>
+
+<h2 id="notes-amp-credits">Notes &amp; Credits</h2>
+
+<p>SVG sprite sheets are similar to <a href="http://simurai.com/blog/2012/04/02/svg-stacks/">icon stacks</a>, and unfortunately suffers similar <a href="https://bugs.webkit.org/show_bug.cgi?id=137328">issues</a> in Safari. What I like about this method is that all artwork is visible in the original image, and you don’t have to do any style tinkering. You do have to do some offset math though, so you’ll have to pick your poison here.</p>
+
+<p>Icons are from a project we’re working on. Browser icons are from Bear Travis' original article.</p>
+
+</body></html>
