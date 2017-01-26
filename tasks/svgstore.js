@@ -396,11 +396,11 @@ module.exports = function (grunt) {
           var iconId = icon.name;
           var useId = iconId + '-use';
           var viewId = iconId + '-view';
-          var viewBox = [0, (maxHeight * (index + 1)), icon.width, maxHeight].join(' ');
+          var viewBox = [0, (maxHeight * index), icon.width, icon.height].join(' ');
 
-          $resultSvg.append('<use id="' + useId +'" xlink:href="#' + iconId + '" x=0 y=' + (maxHeight * (index + 1)) + ' height=' + maxHeight + ' />');
+          $resultSvg.append('<use id="' + useId +'" xlink:href="#' + iconId + '" x=0 y=' + (maxHeight * index) + ' height=' + icon.height + ' />');
           $resultSvg.append('<view id="' + viewId + '" viewBox="' + viewBox + '" />');
-          $resultSvg.attr("viewBox", '0 0 ' + maxWidth + ' ' + maxHeight * (iconNameViewBoxArray.length + 1));
+          $resultSvg.attr("viewBox", '0 0 ' + maxWidth + ' ' + maxHeight * iconNameViewBoxArray.length);
         });
       }
 
